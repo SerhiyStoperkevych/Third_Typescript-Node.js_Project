@@ -1,0 +1,40 @@
+import express, { Router, Request, Response } from 'express';
+import { getTodos } from '../data/loadData';
+import { saveTodos } from '../data/saveData';
+
+interface Todo {
+    id: number;
+    title: string;
+    description: string;
+}
+
+let todos: Todo[] = getTodos();
+
+const router: Router = express.Router();
+
+router.post('/todos', (req: Request, res: Response) => {
+    const { title, description } = req.body;
+
+    if (!title || !description) {
+        return res.status(400).json({ message: "Title and description are required" });
+    }
+
+    const todoExists = todos.some(todo => todo.title === title && todo.description === description);
+    if (todoExists) {
+        return res.status(400).json({ message: "The same Todo already exists" });
+    }
+
+    const newTodo: Todo = {
+        id: Date.now(),
+        title,
+        description
+    };
+
+    todos.push(newTodo);
+    saveTodos(todos);
+    res.status(201).json({ message: "Todo was created" });
+});
+
+export {
+    router
+};
